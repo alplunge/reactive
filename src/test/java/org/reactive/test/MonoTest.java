@@ -62,4 +62,62 @@ public class MonoTest {
         StepVerifier.create(mono).expectNext(name.toUpperCase()).verifyComplete();
 
     }
+
+    @Test
+    public void monoDoOnOperators() {
+        Mono<String> mono = Mono.just(name)
+                .log()
+                .map(String::toUpperCase)
+                .doOnSubscribe(subscription -> log.info("Subscribed"))
+                .doOnRequest(number -> log.info("Request received, with the back-pressure of {}", number))
+                .doOnNext(s -> log.info("Executing donOnNext with the received value from publisher's onNext method {}", s))
+                .doOnSuccess(s -> log.info("will only work when value successfully retrieved from publisher, the value is {}", s));
+
+        mono.subscribe(s -> log.info("Value {}", s), Throwable::printStackTrace, () -> log.info("FINISHED"));
+
+    }
+
+    @Test
+    public void monoOnError() {
+        Mono<Object> error = Mono.error(new IllegalArgumentException("I am illegal error!"))
+        .doOnError(throwable -> MonoTest.log.error("Error message {}", throwable.getMessage()))
+                .doOnNext(o -> log.info("I am not going to be executed, error happened"))
+                .log();
+
+        log.info("-----------------------------");
+        StepVerifier.create(error).expectError(IllegalArgumentException.class).verify();
+
+    }
+
+    @Test
+    public void monoOnErrorResume() {
+        Mono<Object> error = Mono.error(new IllegalArgumentException("I am illegal error!"))
+                .doOnError(throwable -> MonoTest.log.error("Error message {}", throwable.getMessage()))
+                .onErrorResume(o -> {
+                    log.info("Inside of an error resume operator");
+                    return Mono.just(name);
+                })
+                .doOnNext(s -> log.info("Recovered from an error with a new mono, which is {}", s))
+                .log();
+
+        log.info("-----------------------------");
+        StepVerifier.create(error).expectNext(name).verifyComplete();
+
+    }
+
+    @Test
+    public void monoOnErrorReturn() {
+        Mono<Object> error = Mono.error(new IllegalArgumentException("I am illegal error!"))
+                .onErrorReturn("EMPTY STRING")
+                .onErrorResume(o -> {
+                    log.info("I am ignored, why? Because onErrorReturn operator has made it first");
+                    return Mono.just(name);
+                })
+                .doOnNext(s -> log.info("Recovered from an error with a new mono, which is {}", s))
+                .log();
+
+        log.info("-----------------------------");
+        StepVerifier.create(error).expectNext("EMPTY STRING").verifyComplete();
+
+    }
 }
