@@ -19,7 +19,6 @@ public class FluxTest {
     String person2;
     String person3;
     List<Integer> numbers;
-    Flux<Integer> range;
 
     @BeforeEach
     public void init() {
@@ -27,7 +26,6 @@ public class FluxTest {
         person2 = "Denerys";
         person3 = "Sasuke";
         numbers = List.of(1, 2, 3, 4, 5);
-        range = Flux.range(1, 10);
     }
 
     @Test
@@ -40,7 +38,7 @@ public class FluxTest {
 
     @Test
     public void fluxSubscriberNumbers() {
-        range.log();
+        Flux<Integer> range = Flux.range(1, 10).log();
 
         range.limitRate(5).subscribe(integer -> log.info("And we have a number {} out of 10", integer));
         log.info("-----------------------------");
@@ -60,12 +58,14 @@ public class FluxTest {
 
     @Test
     public void fluxSubscriberNumbersOnError() {
-        range.log().map(n -> {
-            if (n == 4) {
-                throw new IndexOutOfBoundsException("Oh nasty nasty");
-            }
-            return n;
-        });
+        Flux<Integer> range = Flux.range(1, 10)
+                .log()
+                .map(n -> {
+                    if (n == 4) {
+                        throw new IndexOutOfBoundsException("Oh nasty nasty");
+                    }
+                    return n;
+                });
 
         range.subscribe(integer -> log.info("And we have a number {} out of 10", integer), Throwable::printStackTrace, () -> log.info("DONE!"));
         log.info("-----------------------------");
@@ -75,7 +75,7 @@ public class FluxTest {
 
     @Test
     public void fluxSubscriberNumbersWithUglyBackPressure() {
-        range.log();
+        Flux<Integer> range = Flux.range(1, 10).log();
 
         range.subscribe(new Subscriber<>() {
             private int count = 0;
@@ -115,7 +115,7 @@ public class FluxTest {
 
     @Test
     public void fluxSubscriberNumbersWithBackPressure() {
-        range.log();
+        Flux<Integer> range = Flux.range(1, 10).log();
 
         range.subscribe(new BaseSubscriber<>() {
             private int count = 0;
@@ -168,7 +168,7 @@ public class FluxTest {
 
     @Test
     public void connectableFlux() throws InterruptedException {
-        ConnectableFlux<Integer> connectableFlux = range
+        ConnectableFlux<Integer> connectableFlux = Flux.range(1, 10)
                 .log()
                 .delayElements(Duration.ofMillis(100))
                 .publish();
@@ -196,15 +196,15 @@ public class FluxTest {
 
     @Test
     public void connectableFluxAutoConnect() {
-        range
-            .log()
-            .delayElements(Duration.ofMillis(100))
-            .publish()
-            .autoConnect(2);
+        Flux<Integer> integerFlux = Flux.range(1, 10)
+                .log()
+                .delayElements(Duration.ofMillis(100))
+                .publish()
+                .autoConnect(2);
         log.info("-----------------------------");
         StepVerifier
-                .create(range)
-                .then(range::subscribe)
+                .create(integerFlux)
+                .then(integerFlux::subscribe)
                 .expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
                 .expectComplete()
                 .verify();
