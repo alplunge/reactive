@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
+import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -18,6 +19,7 @@ public class FluxTest {
     String person2;
     String person3;
     List<Integer> numbers;
+    Flux<Integer> range;
 
     @BeforeEach
     public void init() {
@@ -25,6 +27,7 @@ public class FluxTest {
         person2 = "Denerys";
         person3 = "Sasuke";
         numbers = List.of(1, 2, 3, 4, 5);
+        range = Flux.range(1, 10);
     }
 
     @Test
@@ -37,11 +40,11 @@ public class FluxTest {
 
     @Test
     public void fluxSubscriberNumbers() {
-        Flux<Integer> numbers = Flux.range(1, 10).log();
+        range.log();
 
-        numbers.limitRate(5).subscribe(integer -> log.info("And we have a number {} out of 10", integer));
+        range.limitRate(5).subscribe(integer -> log.info("And we have a number {} out of 10", integer));
         log.info("-----------------------------");
-        StepVerifier.create(numbers).expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).verifyComplete();
+        StepVerifier.create(range).expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).verifyComplete();
 
     }
 
@@ -57,24 +60,24 @@ public class FluxTest {
 
     @Test
     public void fluxSubscriberNumbersOnError() {
-        Flux<Integer> numbers = Flux.range(1, 10).log().map(n -> {
+        range.log().map(n -> {
             if (n == 4) {
                 throw new IndexOutOfBoundsException("Oh nasty nasty");
             }
             return n;
         });
 
-        numbers.subscribe(integer -> log.info("And we have a number {} out of 10", integer), Throwable::printStackTrace, () -> log.info("DONE!"));
+        range.subscribe(integer -> log.info("And we have a number {} out of 10", integer), Throwable::printStackTrace, () -> log.info("DONE!"));
         log.info("-----------------------------");
-        StepVerifier.create(numbers).expectNext(1, 2, 3).expectError(IndexOutOfBoundsException.class).verify();
+        StepVerifier.create(range).expectNext(1, 2, 3).expectError(IndexOutOfBoundsException.class).verify();
 
     }
 
     @Test
     public void fluxSubscriberNumbersWithUglyBackPressure() {
-        Flux<Integer> numbers = Flux.range(1, 10).log();
+        range.log();
 
-        numbers.subscribe(new Subscriber<>() {
+        range.subscribe(new Subscriber<>() {
             private int count = 0;
             private Subscription subscription;
             private final int requestCount = 2;
@@ -106,15 +109,15 @@ public class FluxTest {
             }
         });
         log.info("-----------------------------");
-        StepVerifier.create(numbers).expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).verifyComplete();
+        StepVerifier.create(range).expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).verifyComplete();
 
     }
 
     @Test
     public void fluxSubscriberNumbersWithBackPressure() {
-        Flux<Integer> numbers = Flux.range(1, 10).log();
+        range.log();
 
-        numbers.subscribe(new BaseSubscriber<>() {
+        range.subscribe(new BaseSubscriber<>() {
             private int count = 0;
             private final int requestCount = 2;
 
@@ -134,7 +137,7 @@ public class FluxTest {
 
         });
         log.info("-----------------------------");
-        StepVerifier.create(numbers).expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).verifyComplete();
+        StepVerifier.create(range).expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).verifyComplete();
 
     }
 
@@ -161,5 +164,50 @@ public class FluxTest {
 
     private Flux<Long> getInterval() {
         return Flux.interval(Duration.ofDays(1)).log();
+    }
+
+    @Test
+    public void connectableFlux() throws InterruptedException {
+        ConnectableFlux<Integer> connectableFlux = range
+                .log()
+                .delayElements(Duration.ofMillis(100))
+                .publish();
+
+//        connectableFlux.connect();
+//
+//        log.info("Thread sleep 300ms");
+//        Thread.sleep(300);
+//
+//        connectableFlux.subscribe(i -> log.info("Subscriber 1 with number {}", i));
+//
+//        log.info("Thread sleep 200ms");
+//        Thread.sleep(200);
+//
+//        connectableFlux.subscribe(i -> log.info("Subscriber 2 with number {}", i));
+        log.info("-----------------------------");
+        StepVerifier
+                .create(connectableFlux)
+                .then(connectableFlux::connect)
+                .expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+                .expectComplete()
+                .verify();
+
+    }
+
+    @Test
+    public void connectableFluxAutoConnect() {
+        range
+            .log()
+            .delayElements(Duration.ofMillis(100))
+            .publish()
+            .autoConnect(2);
+        log.info("-----------------------------");
+        StepVerifier
+                .create(range)
+                .then(range::subscribe)
+                .expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+                .expectComplete()
+                .verify();
+
     }
 }
