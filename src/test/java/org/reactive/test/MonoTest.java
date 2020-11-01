@@ -80,7 +80,7 @@ public class MonoTest {
     @Test
     public void monoOnError() {
         Mono<Object> error = Mono.error(new IllegalArgumentException("I am illegal error!"))
-        .doOnError(throwable -> MonoTest.log.error("Error message {}", throwable.getMessage()))
+                .doOnError(throwable -> MonoTest.log.error("Error message {}", throwable.getMessage()))
                 .doOnNext(o -> log.info("I am not going to be executed, error happened"))
                 .log();
 
