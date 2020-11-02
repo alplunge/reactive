@@ -1,10 +1,11 @@
 package org.reactive.test;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.blockhound.BlockHound;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
@@ -15,17 +16,14 @@ import java.util.List;
 
 @Slf4j
 public class FluxTest {
-    String person;
-    String person2;
-    String person3;
-    List<Integer> numbers;
+    String person = "John";
+    String person2 = "Denerys";
+    String person3 = "Sasuke";
+    List<Integer> numbers = List.of(1, 2, 3, 4, 5);
 
-    @BeforeEach
-    public void init() {
-        person = "John";
-        person2 = "Denerys";
-        person3 = "Sasuke";
-        numbers = List.of(1, 2, 3, 4, 5);
+    @BeforeAll
+    public static void setup() {
+        BlockHound.install();
     }
 
     @Test

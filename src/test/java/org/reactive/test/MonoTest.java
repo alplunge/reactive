@@ -1,19 +1,41 @@
 package org.reactive.test;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscription;
+import reactor.blockhound.BlockHound;
+import reactor.blockhound.BlockingOperationError;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
+
 @Slf4j
 public class MonoTest {
-    String name;
+    String name = "Uchiha Itachi";
 
-    @BeforeEach
-    public void init() {
-        name = "Uchiha Itachi";
+    @BeforeAll
+    public static void setup() {
+        BlockHound.install();
+    }
+
+    @Test
+    public void blockHoundTestExample() {
+        try {
+            Mono.delay(Duration.ofSeconds(1))
+                    .doOnNext(it -> {
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            log.error("blocking exception {}", e.getMessage());
+                        }
+                    })
+                    .block();
+        } catch (Exception e) {
+            Assertions.assertTrue(e.getCause() instanceof BlockingOperationError);
+        }
     }
 
     @Test

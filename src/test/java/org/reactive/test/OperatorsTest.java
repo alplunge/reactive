@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import reactor.blockhound.BlockHound;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -20,6 +22,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public class OperatorsTest {
+
+    @BeforeAll
+    public static void setup() {
+        BlockHound.install();
+    }
 
     @Test
     public void subscribeOnSimple() {
@@ -372,7 +379,7 @@ public class OperatorsTest {
         Flux<Integer> episodes = Flux.just(24, 325);
 
         Flux<Anime> animes = titles.zipWith(episodes)
-                .flatMap(tupleObj -> Flux.just(new Anime(tupleObj.getT1(),null, tupleObj.getT2())))
+                .flatMap(tupleObj -> Flux.just(new Anime(tupleObj.getT1(), null, tupleObj.getT2())))
                 .log();
         log.info("-----------------------------");
         StepVerifier.create(animes)
