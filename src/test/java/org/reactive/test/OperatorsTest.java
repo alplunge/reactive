@@ -1,5 +1,9 @@
 package org.reactive.test;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -342,5 +346,50 @@ public class OperatorsTest {
 
     private Flux<String> findByName(String name) {
         return "A".equals(name) ? Flux.just("nameA1", "nameA2").delayElements(Duration.ofMillis(200)) : Flux.just("nameB1", "nameB2");
+    }
+
+    @Test
+    public void zipOperator() {
+        Flux<String> titles = Flux.just("Samurai Champloo", "Dragon Ball Z");
+        Flux<String> studios = Flux.just("Namco Bandai", "Toryama");
+        Flux<Integer> episodes = Flux.just(24, 325);
+
+        Flux<Anime> animes = Flux.zip(titles, studios, episodes)
+                .flatMap(tupleObj -> Flux.just(new Anime(tupleObj.getT1(), tupleObj.getT2(), tupleObj.getT3())))
+                .log();
+        log.info("-----------------------------");
+        StepVerifier.create(animes)
+                .expectSubscription()
+                .expectNext(
+                        new Anime("Samurai Champloo", "Namco Bandai", 24),
+                        new Anime("Dragon Ball Z", "Toryama", 325))
+                .verifyComplete();
+    }
+
+    @Test
+    public void zipWithOperator() {
+        Flux<String> titles = Flux.just("Samurai Champloo", "Dragon Ball Z");
+        Flux<Integer> episodes = Flux.just(24, 325);
+
+        Flux<Anime> animes = titles.zipWith(episodes)
+                .flatMap(tupleObj -> Flux.just(new Anime(tupleObj.getT1(),null, tupleObj.getT2())))
+                .log();
+        log.info("-----------------------------");
+        StepVerifier.create(animes)
+                .expectSubscription()
+                .expectNext(
+                        new Anime("Samurai Champloo", null, 24),
+                        new Anime("Dragon Ball Z", null, 325))
+                .verifyComplete();
+    }
+
+    @AllArgsConstructor
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    class Anime {
+        private String title;
+        private String studio;
+        private int episodes;
     }
 }
