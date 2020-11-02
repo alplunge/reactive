@@ -31,7 +31,6 @@ public class MonoTest {
         mono.subscribe(s -> log.info("Value {}", s));
         log.info("-----------------------------");
         StepVerifier.create(mono).expectNext(name).verifyComplete();
-
     }
 
     @Test
@@ -42,7 +41,6 @@ public class MonoTest {
         mono.subscribe(s -> log.info("Value {}", s), s -> log.error("Scary"));
         log.info("-----------------------------");
         StepVerifier.create(mono).expectError(RuntimeException.class).verify();
-
     }
 
     @Test
@@ -51,7 +49,6 @@ public class MonoTest {
         mono.subscribe(s -> log.info("Value {}", s), Throwable::printStackTrace, () -> log.info("FINISHED"));
         log.info("-----------------------------");
         StepVerifier.create(mono).expectNext(name.toUpperCase()).verifyComplete();
-
     }
 
     @Test
@@ -60,7 +57,6 @@ public class MonoTest {
         mono.subscribe(s -> log.info("Value {}", s), Throwable::printStackTrace, () -> log.info("FINISHED"), Subscription::cancel);
         log.info("-----------------------------");
         StepVerifier.create(mono).expectNext(name.toUpperCase()).verifyComplete();
-
     }
 
     @Test
@@ -74,7 +70,6 @@ public class MonoTest {
                 .doOnSuccess(s -> log.info("will only work when value successfully retrieved from publisher, the value is {}", s));
 
         mono.subscribe(s -> log.info("Value {}", s), Throwable::printStackTrace, () -> log.info("FINISHED"));
-
     }
 
     @Test
@@ -86,7 +81,6 @@ public class MonoTest {
 
         log.info("-----------------------------");
         StepVerifier.create(error).expectError(IllegalArgumentException.class).verify();
-
     }
 
     @Test
@@ -102,7 +96,6 @@ public class MonoTest {
 
         log.info("-----------------------------");
         StepVerifier.create(error).expectNext(name).verifyComplete();
-
     }
 
     @Test
@@ -118,6 +111,5 @@ public class MonoTest {
 
         log.info("-----------------------------");
         StepVerifier.create(error).expectNext("EMPTY STRING").verifyComplete();
-
     }
 }

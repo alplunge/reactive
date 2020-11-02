@@ -196,7 +196,6 @@ public class OperatorsTest {
                 .expectNext("a", "b", "c", "d")
                 .expectComplete()
                 .verify();
-
     }
 
     @Test
@@ -218,7 +217,6 @@ public class OperatorsTest {
                 .expectNext("a", "c", "d")
                 .expectError()
                 .verify();
-
     }
 
     @Test
@@ -233,7 +231,6 @@ public class OperatorsTest {
                 .expectNext("a", "b", "c", "d")
                 .expectComplete()
                 .verify();
-
     }
 
     @Test
@@ -311,5 +308,24 @@ public class OperatorsTest {
                 .expectNext("a", "c", "d", "a")
                 .expectError()
                 .verify();
+    }
+
+    @Test
+    public void flatMapOperator() {
+        Flux<String> flux1 = Flux.just("a", "b");
+
+        Flux<String> flatFlux = flux1.map(String::toUpperCase)
+                .flatMap(this::findByName)
+                .log();
+        log.info("-----------------------------");
+        StepVerifier.create(flatFlux)
+                .expectSubscription()
+                .expectNext("nameB1", "nameB2", "nameA1", "nameA2")
+                .expectComplete()
+                .verify();
+    }
+
+    private Flux<String> findByName(String name) {
+        return "A".equals(name) ? Flux.just("nameA1", "nameA2").delayElements(Duration.ofMillis(200)) : Flux.just("nameB1", "nameB2");
     }
 }

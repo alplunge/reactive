@@ -33,7 +33,6 @@ public class FluxTest {
         Flux<String> personasFlux = Flux.just(person, person2, person3).log();
         log.info("-----------------------------");
         StepVerifier.create(personasFlux).expectNext(person, person2, person3).verifyComplete();
-
     }
 
     @Test
@@ -43,7 +42,6 @@ public class FluxTest {
         range.limitRate(5).subscribe(integer -> log.info("And we have a number {} out of 10", integer));
         log.info("-----------------------------");
         StepVerifier.create(range).expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).verifyComplete();
-
     }
 
     @Test
@@ -53,7 +51,6 @@ public class FluxTest {
         fluxNumbers.subscribe(integer -> log.info("And we have a number {}", integer));
         log.info("-----------------------------");
         StepVerifier.create(fluxNumbers).expectNext(1, 2, 3, 4, 5).verifyComplete();
-
     }
 
     @Test
@@ -70,7 +67,6 @@ public class FluxTest {
         range.subscribe(integer -> log.info("And we have a number {} out of 10", integer), Throwable::printStackTrace, () -> log.info("DONE!"));
         log.info("-----------------------------");
         StepVerifier.create(range).expectNext(1, 2, 3).expectError(IndexOutOfBoundsException.class).verify();
-
     }
 
     @Test
@@ -110,7 +106,6 @@ public class FluxTest {
         });
         log.info("-----------------------------");
         StepVerifier.create(range).expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).verifyComplete();
-
     }
 
     @Test
@@ -138,7 +133,6 @@ public class FluxTest {
         });
         log.info("-----------------------------");
         StepVerifier.create(range).expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).verifyComplete();
-
     }
 
     @Test
@@ -191,7 +185,6 @@ public class FluxTest {
                 .expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
                 .expectComplete()
                 .verify();
-
     }
 
     @Test
@@ -208,6 +201,5 @@ public class FluxTest {
                 .expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
                 .expectComplete()
                 .verify();
-
     }
 }
